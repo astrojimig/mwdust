@@ -12,6 +12,7 @@ from astropy.table import join
 from scipy import interpolate
 from mwdust.util.download import dust_dir, downloader
 from mwdust.DustMap3D import DustMap3D
+from mwdust.util.extCurves import aebv
 _DEGTORAD = numpy.pi/180.
 _ERASESTR= ""
 _schultheis14dir = os.path.join(dust_dir, 'schultheis14')
@@ -81,7 +82,7 @@ class Schultheis14(DustMap3D):
             {"bin_name": "100", "d_min": 10.0, "d_max": 10.5}
             ]
         self._ndistbin= len(self._distance_bins_definitions)
-        self._ds= numpy.arange(0.25, 10.5, 0.5)
+        self._ds= numpy.arange(0.25, 10.5, 0.5) # distance bins (assumed center)
         # For dust_vals
         self._sintheta= numpy.sin((90.-self._schultheis14_data['GLAT'])*_DEGTORAD)
         self._costheta= numpy.cos((90.-self._schultheis14_data['GLAT'])*_DEGTORAD)
@@ -126,8 +127,12 @@ class Schultheis14(DustMap3D):
                                                          k=1)
             out= interpData(d)
             self._intps[lbIndx]= interpData
-            return out         
-
+        if self._filter is None:
+            return out/aebv('2MASS Ks',sf10=self._sf10)
+        else:
+            return out/aebv('2MASS Ks',sf10=self._sf10)\
+                *aebv(self._filter,sf10=self._sf10)
+        
     def _lbIndx(self,l,b):
         """Return the index in the _schultheis14_data array corresponding to this (l,b)"""
         if l <= self._lmin or l >= self._lmax \
