@@ -12,7 +12,7 @@ from astropy.table import join
 from scipy import interpolate
 from mwdust.util.download import dust_dir, downloader
 from mwdust.DustMap3D import DustMap3D
-from mwdust.util.extCurves import aebv
+#from mwdust.util.extCurves import aebv
 _DEGTORAD = numpy.pi/180.
 _ERASESTR= ""
 _schultheis14dir = os.path.join(dust_dir, 'schultheis14')
@@ -120,18 +120,14 @@ class Schultheis14(DustMap3D):
         if self._intps[lbIndx] != 0:
             out= self._intps[lbIndx](d)
         else:
-            tlbData= self.lbData(l,b)
+            tlbData= self.lbData(l,b,filt=filt)
             interpData=\
                 interpolate.InterpolatedUnivariateSpline(self._ds,
                                                          tlbData['a0'],
                                                          k=1)
             out= interpData(d)
             self._intps[lbIndx]= interpData
-        if self._filter is None:
-            return out/aebv('2MASS Ks',sf10=self._sf10)
-        else:
-            return out/aebv('2MASS Ks',sf10=self._sf10)\
-                *aebv(self._filter,sf10=self._sf10)
+        return out
         
     def _lbIndx(self,l,b):
         """Return the index in the _schultheis14_data array corresponding to this (l,b)"""
@@ -141,7 +137,7 @@ class Schultheis14(DustMap3D):
         return numpy.argmin((l-self._schultheis14_data['GLON'])**2./self._dl**2.\
                                 +(b-self._schultheis14_data['GLAT'])**2./self._db**2.)
     
-    def lbData(self,l,b,filt = "(H-K)"):
+    def lbData(self,l,b,filt):
         """
         NAME:
            lbData
