@@ -6,15 +6,13 @@
 ###############################################################################
 import os, os.path
 import numpy
-import sys
 from astropy.io import ascii
 from astropy.table import join
 from scipy import interpolate
 from mwdust.util.download import dust_dir, downloader
 from mwdust.DustMap3D import DustMap3D
-#from mwdust.util.extCurves import aebv
+from mwdust.util.extCurves import aebv
 _DEGTORAD = numpy.pi/180.
-_ERASESTR= ""
 _schultheis14dir = os.path.join(dust_dir, 'schultheis14')
 class Schultheis14(DustMap3D):
     """extinction model from Schultheis et al. (2014)
@@ -37,8 +35,6 @@ class Schultheis14(DustMap3D):
         DustMap3D.__init__(self,filter=filter)
         self._sf10 = sf10
         #Read the data
-        sys.stdout.write('\r'+"Reading Schultheis14 et al. (2014) data files ...\r")
-        sys.stdout.flush()
         self._table1hk_data = ascii.read(os.path.join(_schultheis14dir, 'table1hk.dat'), 
                                          readme = os.path.join(_schultheis14dir,'ReadMe'),
                                          guess=False, format='cds', fill_values=[('', '-999')]) 
@@ -47,8 +43,6 @@ class Schultheis14(DustMap3D):
                                          guess=False, format='cds', fill_values=[('', '-999')])
         # Join both tables together
         self._schultheis14_data = join(self._table1hk_data, self._table1jk_data)
-        sys.stdout.write('\r'+_ERASESTR+'\r')
-        sys.stdout.flush()
         
         # Some summaries
         self._lmin= numpy.amin(self._schultheis14_data['GLON'])
@@ -83,6 +77,7 @@ class Schultheis14(DustMap3D):
             ]
         self._ndistbin= len(self._distance_bins_definitions)
         self._ds= numpy.arange(0.25, 10.5, 0.5) # distance bins (assumed center)
+        self._ds[0] = 0 #fix first bin
         # For dust_vals
         self._sintheta= numpy.sin((90.-self._schultheis14_data['GLAT'])*_DEGTORAD)
         self._costheta= numpy.cos((90.-self._schultheis14_data['GLAT'])*_DEGTORAD)
@@ -111,8 +106,6 @@ class Schultheis14(DustMap3D):
         available_filters = ["(H-K)", "(J-K)"]
         if filt not in available_filters:
             raise ValueError(f"Filter {filt} not recognized. Please choose from: {available_filters} ")
-        
-        #-------
         if isinstance(l,numpy.ndarray) or isinstance(b,numpy.ndarray):
             raise NotImplementedError("array input for l and b for Schultheis14 et al. (2014) dust map not implemented")
         if _lbIndx is None: lbIndx= self._lbIndx(l,b)
@@ -127,8 +120,12 @@ class Schultheis14(DustMap3D):
                                                          k=1)
             out= interpData(d)
             self._intps[lbIndx]= interpData
-        return out
-        
+        if self._filter is None:
+            return out/aebv('2MASS Ks',sf10=self._sf10)
+        else:
+            return out/aebv('2MASS Ks',sf10=self._sf10)\
+                *aebv(self._filter,sf10=self._sf10)    
+            
     def _lbIndx(self,l,b):
         """Return the index in the _schultheis14_data array corresponding to this (l,b)"""
         if l <= self._lmin or l >= self._lmax \
