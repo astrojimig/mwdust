@@ -87,7 +87,7 @@ class Schultheis14(DustMap3D):
         self._intps= numpy.zeros(len(self._schultheis14_data),dtype='object')
         return None
     
-    def _evaluate(self, l, b, d, filt='(H-K)', _lbIndx=None):
+    def _evaluate(self, l, b, d, filt='(J-K)', _lbIndx=None):
         """
         NAME:
            _evaluate
@@ -97,7 +97,7 @@ class Schultheis14(DustMap3D):
            l- Galactic longitude (deg)
            b- Galactic latitude (deg)
            d- distance (kpc) can be array
-           filt- extinction value to use: "(H-K)" by default or "(J-K)"
+           filt- extinction value to use: "(H-K)" or "(J-K)" by default
         OUTPUT:
            extinction
         HISTORY:
@@ -143,7 +143,7 @@ class Schultheis14(DustMap3D):
         INPUT:
            l- Galactic longitude (deg)
            b- Galactic latitude (deg)
-           filt- extinction value to use: "(H-K)" by default or "(J-K)"
+           filt- extinction value to use: "(H-K)" or "(J-K)" by default 
         OUTPUT:
             out- recarray of extinction values and errors for each distance bin
         HISTORY:
