@@ -88,6 +88,10 @@ roughly the following lay-out::
        sale14/
           Amap.dat
           ReadMe
+       schultheis14/
+          ReadMe
+          table1hk.dat
+          table1jk.dat
 
 The data for the Drimmel et al. (2003) map is installed in the code
 directory, because it is not very large.
